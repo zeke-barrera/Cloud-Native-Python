@@ -1,6 +1,8 @@
 from flask import Flask
+from flask import abort
 from flask import jsonify
 from flask import make_response
+from flask import request
 import json
 import sqlite3
 
@@ -28,6 +30,38 @@ def list_users():
 
     conn.close()
     return jsonify({'user_list': api_list})
+
+@app.route('/api/v1/users/', methods=['POST'])
+def create_user():
+    if not request.json or not 'username' in request.json or not \
+    'emailid' in request.json or not 'password' in request.json:
+        abort(400)
+    user = {
+        'username': request.json['username'],
+        'emailid': request.json['emailid'],
+        'full_name': request.json.get('full_name', ""),
+        'password': request.json['password']
+    }
+    return jsonify({'status': add_user(user)}), 201
+
+def add_user(new_user):
+    conn = sqlite3.connect('mydb.db')
+    print('Opened database successfully');
+    api_list=[]
+    cursor = conn.cursor()
+    cursor.execute('SELECT * from users where username=? or \
+    emailid=?', (new_user['username'], new_user['emailid']))
+    data = cursor.fetchall()
+    if len(data) != 0:
+        abort(409)
+    else:
+        cursor.execute("insert into users (username, emailid, password,\
+        full_name) values(?,?,?,?)", (new_user['username'], new_user['emailid'],\
+        new_user['password'], new_user['full_name']))
+        conn. commit()
+        return 'Success'
+    conn.close()
+    return jsonify(a_dict)
 
 @app.route('/api/v1/users/[user_id]', methods=['GET'])
 def get_user(user_id):
@@ -68,6 +102,10 @@ def home_index():
 
     conn.close()
     return jsonify({'api_version': api_list}), 200
+
+@app.errorhandler(400)
+def invalid_request(error):
+    return make_response(jsonify({'error': 'Bad Request'}), 400)
 
 @app.errorhandler(404)
 def resource_not_found(error):
