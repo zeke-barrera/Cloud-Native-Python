@@ -4,6 +4,7 @@ import json
 import sqlite3
 
 app = Flask(__name__) 
+
 @app.route("/api/v1/users", methods=['GET'])
 def get_users():
     return list_users()
@@ -12,15 +13,15 @@ def list_users():
     conn = sqlite3.connect('mydb.db')
     print ("Opened database successfully")
     api_list=[]
-    cursor = conn.execute("SELECT username, full_name, \
-    email, password, id from users")
+    cursor = conn.execute("SELECT username, emailid, \
+    password, full_name, id from users")
 
     for row in cursor:
         a_dict = {}
         a_dict['username'] = row[0]
-        a_dict['name'] = row[1]
-        a_dict['email'] = row[2]
-        a_dict['password'] = row[3]
+        a_dict['emailid'] = row[1]
+        a_dict['password'] = row[2]
+        a_dict['full_name'] = row[3]
         a_dict['id'] = row[4]
         api_list.append(a_dict)
 
