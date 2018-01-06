@@ -12,3 +12,11 @@ create table users(
         password varchar2(30), full_name varchar(30),
         id integer primary key autoincrement
 );
+
+drop table if exists tweets;
+create table tweets(
+        id integer primary key autoincrement,
+        username varchar2(30),
+        body varchar2(30),
+        tweet_time date
+);
