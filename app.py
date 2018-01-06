@@ -123,7 +123,7 @@ def upd_user(user):
                 conn.commit()
         return 'Success'
 
-@app.route('/api/v1/users/[user_id]', methods=['GET'])
+@app.route('/api/v1/users/<int:user_id>', methods=['GET'])
 def get_user(user_id):
     return list_user(user_id)
 
@@ -141,9 +141,9 @@ def list_user(user_id):
         user['password'] = data[0][2]
         user['full_name'] = data[0][3]
         user['id'] = data[0][4]
-
+        api_list.append(user)
     conn.close()
-    return jsonify(a_dict)
+    return jsonify({'{0}'.format(user_id):api_list})
 
 @app.route('/api/v1/info')
 def home_index():
