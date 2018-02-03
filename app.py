@@ -174,18 +174,75 @@ def list_tweets():
     api_list = []
     cursor = conn.execute('SELECT username, body, tweet_time, id from tweets')
     data = cursor.fetchall()
-    if data != 0:
-        for row in cursor:
+
+    if len(data) != 0:
+        for row in data:
             tweets = {}
-            tweets['Tweet By'] = row[0]
-            tweets['Body'] = row[1]
-            tweets['Timestamp'] = row[2]
+            tweets['username'] = row[0]
+            tweets['body'] = row[1]
+            tweets['tweet_time'] = row[2]
             tweets['id'] = row[3]
             api_list.append(tweets)
     else:
         return api_list
+    
     conn.close()
     return jsonify({'tweets_list': api_list})
+
+#Add tweets by user
+@app.route('/api/v2/tweets', methods=['POST'])
+def add_tweets():
+    user_tweet = {}
+    if not request.json or not 'username' in request.json or not 'body' in request.json:
+        abort(400)
+    user_tweet['username'] = request.json['username']
+    user_tweet['body'] = request.json['body']
+    user_tweet['tweet_time'] = "4/29/1992"
+    print(user_tweet)
+    return jsonify({'status': add_tweet(user_tweet)}), 200
+
+def add_tweet(new_tweets):
+    conn = sqlite3.connect('mydb.db')
+    print('Opened database successfully')
+    cursor=conn.cursor()
+    cursor.execute('SELECT * from users where username=? ', (new_tweets['username'],))
+    data = cursor.fetchall()
+
+    if len(data) == 0:
+        abort(404)
+    else:
+        cursor.execute('INSERT into tweets (username, body, tweet_time) values(?,?,?)',(new_tweets['username'], new_tweets['body'],\
+                      new_tweets['tweet_time']))
+        conn.commit()
+
+    conn.close()
+    return 'Success'
+
+#get tweets by id
+@app.route('/api/v2/tweets/<int:id>', methods=['GET'])
+def get_tweet(id):
+    return list_tweet(id)
+
+def list_tweet(user_id):
+    print(user_id)
+    conn = sqlite3.connect('mydb.db')
+    print('Opened database successfully')
+    api_list = []
+    cursor = conn.cursor()
+    cursor.execute('SELECT * from tweets where id=?', (user_id,))
+    data = cursor.fetchall()
+    print(data)
+    if len(data) == 0:
+        abort(404)
+    else:
+        user = {}
+        user['id'] = data[0][0]
+        user['username'] = data[0][1]
+        user['body'] = data[0][2]
+        user['tweet_time'] = data[0][3]
+
+    conn.close()
+    return jsonify(user)
 
 @app.errorhandler(400)
 def invalid_request(error):
